@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinayaka Certificate Portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        /* All CSS from previous response stays here */
+        :root { --nav-bg: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
+        body, html { margin: 0; padding: 0; height: 100%; background: #f0f2f5; font-family: sans-serif; overflow: hidden; }
+        .app-container { display: flex; flex-direction: column; height: 100vh; }
+        nav { background: var(--nav-bg); color: white; padding: 12px; display: none; align-items: center; gap: 15px; flex-wrap: wrap; }
+        select, input { padding: 10px; border-radius: 4px; border: none; min-width: 160px; }
+        #viewer-area { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        canvas { background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.2); width: 95%; height: auto; }
+        #login-screen { position: fixed; inset: 0; background: var(--nav-bg); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .login-card { background: white; padding: 30px; border-radius: 12px; text-align: center; width: 320px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: none; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-card">
+        <h2>Vinayaka Login</h2>
+        <input type="text" id="uid" placeholder="Username" style="width:100%; border:1px solid #ddd; margin-bottom:10px;"><br>
+        <input type="password" id="pass" placeholder="Password" style="width:100%; border:1px solid #ddd; margin-bottom:10px;"><br>
+        <button onclick="handleLogin()" style="width:100%; padding:10px; background:var(--accent); color:white; border:none; border-radius:4px; cursor:pointer;">SIGN IN</button>
+        <p id="msg" style="color:red; font-size:12px;"></p>
+    </div>
+</div>
+
+<div class="app-container">
+    <nav id="navbar">
+        <input type="text" id="searchBox" placeholder="Search..." style="display:none" oninput="filterFiles()">
+        <select id="batchSelect" onchange="loadCandidates()"><option value="">Batches</option></select>
+        <select id="candSelect" onchange="fetchFile(this.value)"><option value="">Candidates</option></select>
+        <button id="dlBtn" onclick="initiateDownload()" style="background:var(--success); color:white; display:none; border:none; padding:10px; border-radius:4px; cursor:pointer;">DOWNLOAD</button>
+        <button onclick="handleLogout()" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:4px; cursor:pointer;">LOGOUT</button>
+    </nav>
+
+    <div id="viewer-area">
+        <div id="loader" class="loader"></div>
+        <div id="welcome-msg">Please select a batch.</div>
+        <canvas id="pdfCanvas"></canvas>
+    </div>
+</div>
+
+<script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYGdMi3tNcsJTrIwiJ-PKOB_AUFGzj9LsUjRD_Sv6o9KwxjoYfk9UpS1iHcO9vhjPl/exec"; 
+    let userRole = "";
+    let currentFile = null;
+
+    // Helper function to talk to Google Script
+    async function apiRequest(action, args = []) {
+        const url = `${WEB_APP_URL}?action=${action}&args=${encodeURIComponent(JSON.stringify(args))}`;
+        const response = await fetch(url);
+        return await response.json();
+    }
+
+    async function handleLogin() {
+        const id = document.getElementById('uid').value;
+        const ps = document.getElementById('pass').value;
+        const res = await apiRequest("checkLogin", [id, ps]);
+        
+        if (res && res.role) {
+            userRole = res.role;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('navbar').style.display = 'flex';
+            startApp();
+        } else {
+            document.getElementById('msg').innerText = "Incorrect login.";
+        }
+    }
+
+    async function startApp() {
+        const batches = await apiRequest("getBatches");
+        const bSelect = document.getElementById('batchSelect');
+        bSelect.innerHTML = '<option value="">Select Batch</option>';
+        batches.forEach(item => bSelect.add(new Option(item.name, item.id)));
+
+        if (userRole === 'admin') {
+            document.getElementById('searchBox').style.display = 'block';
+        }
+    }
+
+    async function loadCandidates() {
+        const id = document.getElementById('batchSelect').value;
+        const cSelect = document.getElementById('candSelect');
+        cSelect.innerHTML = '<option value="">Loading...</option>';
+        const data = await apiRequest("getFilesInBatch", [id]);
+        cSelect.innerHTML = '<option value="">Select Candidate</option>';
+        data.forEach(item => cSelect.add(new Option(item.name, item.id)));
+    }
+
+    async function fetchFile(id) {
+        if(!id) return;
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('welcome-msg').style.display = 'none';
+        const res = await apiRequest("getFileBytes", [id]);
+        currentFile = res;
+        drawOnCanvas(res.bytes);
+    }
+
+    async function drawOnCanvas(base64) {
+        const uint8 = new Uint8Array(atob(base64).split("").map(c => c.charCodeAt(0)));
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        const pdf = await pdfjsLib.getDocument({data: uint8}).promise;
+        const page = await pdf.getPage(1);
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
+        const viewport = page.getViewport({scale: 1.5});
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        await page.render({canvasContext: context, viewport: viewport}).promise;
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('dlBtn').style.display = 'block';
+    }
+
+    function initiateDownload() {
+        const link = document.createElement('a');
+        link.href = 'data:application/pdf;base64,' + currentFile.bytes;
+        link.download = currentFile.name;
+        link.click();
+    }
+
+    function handleLogout() {
+        location.reload();
+    }
+</script>
+</body>
+</html>
