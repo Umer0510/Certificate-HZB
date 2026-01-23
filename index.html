@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,72 +10,108 @@
     
     <style>
         :root {
-            --nav-bg: #1a252f;
-            --accent: #3498db;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --footer-gradient: linear-gradient(90deg, #1e3c72 0%, #2a5298 50%, #3498db 100%);
-            --nav-height: 9vh;
-            --footer-height: 7vh;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --nav-height: 70px;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { 
-            margin: 0; padding: 0; height: 100vh; width: 100vw;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f4f7f6; display: flex; flex-direction: column; overflow: hidden; 
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark); color: var(--text-main);
+            display: flex; flex-direction: column; overflow: hidden; 
         }
 
-        /* --- LOGIN SCREEN --- */
-        #login-screen { position: fixed; inset: 0; background: var(--nav-bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { background: white; padding: 5vh 3vw; border-radius: 2vh; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 2vh 5vh rgba(0,0,0,0.5); }
-        .login-card img { height: 10vh; margin-bottom: 2vh; }
-        .login-card input { width: 100%; padding: 1.5vh; margin: 1vh 0; border: 1px solid #ddd; border-radius: 1vh; font-size: 1rem; }
+        /* --- MODERN LOGIN --- */
+        #login-screen { 
+            position: fixed; inset: 0; 
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            display: flex; align-items: center; justify-content: center; z-index: 9999; 
+        }
+        .login-card { 
+            background: var(--card-bg); backdrop-filter: blur(12px);
+            padding: 40px; border-radius: 24px; width: 90%; max-width: 400px; 
+            text-align: center; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .login-card img { height: 90px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--accent)); }
+        .login-card input { 
+            width: 100%; padding: 14px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 12px; font-size: 16px; background: rgba(0,0,0,0.2); color: white; outline: none;
+        }
+        .login-card input:focus { border-color: var(--accent); }
 
-        /* --- NAVIGATION --- */
-        nav { min-height: var(--nav-height); background: var(--nav-bg); color: white; padding: 0 2vw; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.3); z-index: 100; }
-        .nav-left { display: flex; align-items: center; gap: 1.5vw; flex: 1; padding: 1vh 0; position: relative; }
-        .nav-right { display: flex; align-items: center; gap: 1.2vw; }
+        /* --- SMART NAVIGATION --- */
+        nav { 
+            height: auto; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px);
+            padding: 10px 20px; display: none; align-items: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 100; 
+        }
+        .nav-container { display: flex; flex-direction: column; width: 100%; gap: 10px; }
+        .nav-top { display: flex; justify-content: space-between; align-items: center; }
+        .nav-bottom { display: flex; flex-direction: column; gap: 10px; }
         
-        .logo-nav { height: 5vh; max-height: 45px; border-radius: 4px; }
-        select, .search-box { padding: 1vh; border-radius: 0.8vh; border: none; font-size: 0.9rem; min-width: 15vw; outline: none; }
-        
-        /* --- UNLIMITED SEARCH SUGGESTIONS --- */
-        .search-container { position: relative; display: none; }
+        .logo-nav { height: 40px; }
+        select, .search-box { 
+            padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+            font-size: 14px; background: #1e293b; color: white; outline: none; width: 100%;
+        }
+
+        /* --- SEARCH LIST --- */
+        .search-container { position: relative; width: 100%; }
         #searchSuggestions {
-            position: absolute; top: 105%; left: 0; width: 100%;
-            background: white; color: #333; border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            max-height: 400px; /* High enough for many results */
-            overflow-y: auto; z-index: 1000;
-            display: none; list-style: none; padding: 0; margin: 0; border: 1px solid #ddd;
+            position: absolute; top: 100%; left: 0; width: 100%;
+            background: #1e293b; border-radius: 0 0 12px 12px;
+            max-height: 280px; overflow-y: auto; z-index: 1000;
+            display: none; list-style: none; padding: 0; margin: 0; border: 1px solid var(--accent);
         }
-        .suggestion-item { padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; flex-direction: column; transition: 0.2s; }
-        .suggestion-item:hover { background: var(--accent); color: white; }
-        .suggestion-item small { opacity: 0.7; font-size: 0.7rem; }
+        .suggestion-item { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .suggestion-item:hover { background: var(--accent); }
 
-        /* --- VIEWER --- */
-        #viewer-area { height: calc(100vh - (var(--nav-height) + var(--footer-height))); width: 100%; position: relative; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 2vh 0; }
-        canvas { background: white; box-shadow: 0 1vh 4vh rgba(0,0,0,0.15); border-radius: 0.5vh; width: 95% !important; height: auto !important; display: none; margin-bottom: 20px; }
-
-        /* --- COLORFUL FOOTER --- */
-        footer { height: var(--footer-height); background: var(--footer-gradient); color: white; padding: 0 2vw; display: none; align-items: center; justify-content: center; gap: 1.5vw; }
-        .logo-footer { height: 3.5vh; }
-
-        /* --- MOBILE --- */
-        @media (max-width: 768px) {
-            nav { padding: 1vh 3vw; height: auto; }
-            .nav-left { flex-direction: column; gap: 1.5vh; width: 100%; align-items: stretch; }
-            .nav-right { width: 100%; justify-content: space-between; padding-bottom: 1.5vh; }
-            select, .search-box, .search-container { min-width: 100%; }
+        /* --- MAIN VIEWER --- */
+        #viewer-area { 
+            flex: 1; overflow: auto; display: flex; flex-direction: column; 
+            align-items: center; padding: 20px 10px; background: #020617; 
+        }
+        canvas { 
+            background: white; border-radius: 4px; 
+            box-shadow: 0 0 40px rgba(0,0,0,0.5); display: none; 
+            max-width: 100%; height: auto !important; 
         }
 
-        button { padding: 1.2vh 2vw; border-radius: 0.8vh; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-primary { background: var(--accent); color: white; width: 100%; }
+        /* --- MODERN FOOTER --- */
+        footer { 
+            padding: 15px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1);
+            display: none; align-items: center; justify-content: center; gap: 12px; font-size: 12px; 
+        }
+        .logo-footer { height: 28px; opacity: 0.8; }
+
+        /* BUTTONS */
+        button { 
+            padding: 12px 20px; border-radius: 12px; border: none; 
+            font-weight: 600; cursor: pointer; transition: all 0.2s; 
+        }
+        .btn-primary { background: var(--accent); color: #0f172a; }
+        .btn-primary:hover { background: var(--accent-hover); }
         .btn-success { background: var(--success); color: white; display: none; }
-        .btn-danger { background: var(--danger); color: white; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: none; margin: 20px; }
+        .btn-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); padding: 8px 15px; }
+
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* DESKTOP VIEW */
+        @media (min-width: 1024px) {
+            .nav-container { flex-direction: row; align-items: center; justify-content: space-between; }
+            .nav-bottom { flex-direction: row; align-items: center; flex: 1; margin-left: 30px; }
+            select, .search-box, .search-container { width: 220px; }
+            canvas { width: 850px !important; }
+        }
     </style>
 </head>
 <body>
@@ -83,186 +119,51 @@
     <div id="login-screen">
         <div class="login-card">
             <img src="logo1.ico" alt="Logo">
-            <h2 style="margin:0; font-size: 1.6rem; color:var(--nav-bg);">Vinayaka Portal</h2>
-            
+            <h2 style="margin:0 0 5px 0; font-size: 1.5rem;">Vinayaka Fundamental Research & Education Society</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Aadil Solutions</p>
             <input type="text" id="uid" placeholder="Username">
             <input type="password" id="pass" placeholder="Password">
-            <button onclick="handleLogin()" class="btn-primary" style="width:100%; margin-top:2vh;">SIGN IN</button>
-            <p id="msg" style="color:var(--danger); font-size:0.85rem; margin-top:1.5vh;"></p>
-		<p style="color:#7f8c8d; font-size:0.9rem; margin-bottom:2vh;">&copy; Aadil Solutions</p>
+            <button onclick="handleLogin()" class="btn-primary" style="width: 100%; margin-top: 15px;">Sign In</button>
+            <p id="msg" style="color:var(--danger); font-size: 0.8rem; margin-top: 15px;"></p>
         </div>
     </div>
 
     <nav id="navbar">
-        <div class="nav-left">
-            <img src="logo1.ico" alt="Logo" class="logo-nav">
-            <div class="search-container" id="adminSearchWrap">
-                <input type="text" id="searchBox" class="search-box" placeholder="Syncing..." disabled oninput="debounceSearch()">
-                <ul id="searchSuggestions"></ul>
+        <div class="nav-container">
+            <div class="nav-top">
+                <img src="logo1.ico" alt="Logo" class="logo-nav">
+                <button class="btn-danger" onclick="handleLogout()">Logout</button>
             </div>
-            <select id="batchSelect" onchange="loadCandidates()">
-                <option value="">Select Batch ID</option>
-            </select>
-            <select id="candSelect" onchange="fetchFile(this.value)">
-                <option value="">Candidates</option>
-            </select>
-        </div>
-        <div class="nav-right">
-            <button id="dlBtn" class="btn-success" onclick="initiateDownload()">DOWNLOAD</button>
-            <button class="btn-danger" onclick="handleLogout()">LOGOUT</button>
+            <div class="nav-bottom">
+                <div class="search-container" id="adminSearchWrap">
+                    <input type="text" id="searchBox" class="search-box" placeholder="Search files..." disabled oninput="debounceSearch()">
+                    <ul id="searchSuggestions"></ul>
+                </div>
+                <select id="batchSelect" onchange="loadCandidates()">
+                    <option value="">Select Batch</option>
+                </select>
+                <select id="candSelect" onchange="fetchFile(this.value)">
+                    <option value="">Candidates</option>
+                </select>
+                <button id="dlBtn" class="btn-success" onclick="initiateDownload()">Download PDF</button>
+            </div>
         </div>
     </nav>
 
     <div id="viewer-area">
-        <div class="loader" id="loader"></div>
-        <div id="welcome-msg" style="color:#bdc3c7; margin-top:10vh; text-align:center;">
-            <h3>VINAYAKA FUNDAMENTAL RESEARCH & EDUCATION SOCIETY PORTAL</h3>
-            <p>Type to search all files or use dropdowns</p>
+        <div id="loader" class="loader"></div>
+        <div id="welcome-msg" style="text-align:center; padding: 40px; color: #64748b;">
+            <h3 style="color: var(--accent);">WELCOME</h3>
+            <p>Select a candidate or search to view certificate</p>
         </div>
         <canvas id="pdfCanvas"></canvas>
     </div>
 
     <footer id="footer">
         <img src="logo.ico" alt="Logo" class="logo-footer">
-        <span>All Rights Reserved for <b>&copy; AADIL SOLUTIONS</b></span>
+        <span>&copy; 2026 Aadil Solutions </span>
     </footer>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxH8HsN9yZPz1XE7rxoE4deEZeuRyOSvOe0S4Ngi8zjXOvi67cS3HjijoWoHpayKtwX/exec"; 
-        let userRole = "";
-        let masterIndex = [];
-        let currentFile = null;
-        let searchTimer;
-
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
-        async function handleLogin() {
-            const id = document.getElementById('uid').value;
-            const ps = document.getElementById('pass').value;
-            const btn = document.querySelector('.btn-primary');
-            btn.innerText = "Checking...";
-            try {
-                const res = await fetch(`${API_URL}?action=checkLogin&args=${encodeURIComponent(JSON.stringify([id,ps]))}`).then(r => r.json());
-                if (res && res.role) {
-                    userRole = res.role;
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('navbar').style.display = 'flex';
-                    document.getElementById('footer').style.display = 'flex';
-                    setupPortal();
-                } else {
-                    btn.innerText = "SIGN IN";
-                    document.getElementById('msg').innerText = "Incorrect Credentials";
-                }
-            } catch(e) { document.getElementById('msg').innerText = "Connection Error"; }
-        }
-
-        async function setupPortal() {
-            fetch(`${API_URL}?action=getBatches&args=[]`).then(r => r.json()).then(data => {
-                const bSel = document.getElementById('batchSelect');
-                bSel.innerHTML = '<option value="">Select Batch ID</option>';
-                data.forEach(b => bSel.add(new Option(b.name, b.id)));
-            });
-
-            if (userRole === 'admin') {
-                document.getElementById('adminSearchWrap').style.display = 'block';
-                const sBox = document.getElementById('searchBox');
-                const cache = localStorage.getItem('aadil_vms_cache');
-                if (cache) {
-                    masterIndex = JSON.parse(cache);
-                    sBox.disabled = false;
-                    sBox.placeholder = "Search "+masterIndex.length+" Files (Cached)";
-                }
-                fetch(`${API_URL}?action=getFullIndex&args=[]`).then(r => r.json()).then(data => {
-                    masterIndex = data;
-                    localStorage.setItem('aadil_vms_cache', JSON.stringify(data));
-                    sBox.disabled = false;
-                    sBox.placeholder = "Search "+data.length+" Files (Synced)";
-                });
-            }
-        }
-
-        function debounceSearch() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(executeSearch, 250);
-        }
-
-        function executeSearch() {
-            const query = document.getElementById('searchBox').value.toLowerCase();
-            const list = document.getElementById('searchSuggestions');
-            list.innerHTML = '';
-            
-            if (query.length < 2) {
-                list.style.display = 'none';
-                return;
-            }
-
-            // REMOVED .slice(0, 15) TO SHOW ALL RESULTS
-            const matches = masterIndex.filter(f => f.name.toLowerCase().includes(query));
-            
-            if (matches.length > 0) {
-                list.style.display = 'block';
-                matches.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'suggestion-item';
-                    li.innerHTML = `<span>${item.name}</span><small>${item.path}</small>`;
-                    li.onclick = () => {
-                        document.getElementById('searchBox').value = item.name;
-                        list.style.display = 'none';
-                        fetchFile(item.id);
-                    };
-                    list.appendChild(li);
-                });
-            } else {
-                list.style.display = 'none';
-            }
-        }
-
-        async function fetchFile(fileId) {
-            if(!fileId) return;
-            document.getElementById('loader').style.display = 'block';
-            document.getElementById('welcome-msg').style.display = 'none';
-            document.getElementById('pdfCanvas').style.display = 'none';
-            document.getElementById('dlBtn').style.display = 'none';
-            const res = await fetch(`${API_URL}?action=getFileBytes&args=${encodeURIComponent(JSON.stringify([fileId]))}`).then(r => r.json());
-            currentFile = res;
-            renderPdf(res.bytes);
-        }
-
-        async function renderPdf(base64) {
-            const bytes = new Uint8Array(atob(base64).split("").map(c => c.charCodeAt(0)));
-            const pdf = await pdfjsLib.getDocument({data: bytes}).promise;
-            const page = await pdf.getPage(1);
-            const canvas = document.getElementById('pdfCanvas');
-            const context = canvas.getContext('2d');
-            const container = document.getElementById('viewer-area');
-            const viewport = page.getViewport({scale: (container.clientWidth * 0.95) / page.getViewport({scale:1}).width});
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            await page.render({canvasContext: context, viewport: viewport}).promise;
-            document.getElementById('loader').style.display = 'none';
-            canvas.style.display = 'block';
-            document.getElementById('dlBtn').style.display = 'block';
-        }
-
-        async function loadCandidates() {
-            const batchId = document.getElementById('batchSelect').value;
-            const cSel = document.getElementById('candSelect');
-            if(!batchId) return;
-            cSel.innerHTML = '<option value="">Loading...</option>';
-            const data = await fetch(`${API_URL}?action=getFilesInBatch&args=${encodeURIComponent(JSON.stringify([batchId]))}`).then(r => r.json());
-            cSel.innerHTML = '<option value="">Select Candidate</option>';
-            data.forEach(c => cSel.add(new Option(c.name, c.id)));
-        }
-
-        function initiateDownload() {
-            const link = document.createElement('a');
-            link.href = 'data:application/pdf;base64,' + currentFile.bytes;
-            link.download = currentFile.name;
-            link.click();
-        }
-
-        function handleLogout() { location.reload(); }
-        window.onclick = (e) => { if (!e.target.closest('.search-container')) document.getElementById('searchSuggestions').style.display = 'none'; };
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
