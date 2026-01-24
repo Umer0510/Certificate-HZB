@@ -99,49 +99,62 @@ async function loadCandidates() {
 }
 
 async function fetchFile(id) {
-    document.getElementById('loader').style.display = 'block';
-    document.getElementById('loader').innerText = "⚡ Fetching PDF...";
+    const loader = document.getElementById('loader');
+    loader.style.display = 'block';
+    loader.innerText = "⚡ Fetching PDF...";
     document.getElementById('welcome-msg').style.display = 'none';
     document.getElementById('pdfCanvas').style.display = 'none';
     document.getElementById('dlBtn').style.display = 'none';
-    document.getElementById('printBtn').style.display = 'none';
 
     try {
-        const res = await fetch(`${API_URL}?action=getFileBytes&args=${encodeURIComponent(JSON.stringify([id]))}`, { priority: 'high' }).then(r => r.json());
-        currentFile = res;
-        renderPdf(res.bytes);
-    } catch(e) { alert("Load Failed"); }
+        const response = await fetch(`${API_URL}?action=getFileBytes&args=${encodeURIComponent(JSON.stringify([id]))}`, { priority: 'high' });
+        const res = await response.json();
+        if (res && res.bytes) {
+            currentFile = res;
+            renderPdf(res.bytes);
+        } else {
+            throw new Error("Empty response");
+        }
+    } catch(e) { 
+        loader.style.display = 'none';
+        alert("Load Failed: " + e.message); 
+    }
 }
 
 async function renderPdf(base64) {
-    const binary = window.atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const pdf = await pdfjsLib.getDocument({data: bytes}).promise;
-    const page = await pdf.getPage(1);
-    const canvas = document.getElementById('pdfCanvas');
-    const context = canvas.getContext('2d');
-    
-    const containerWidth = document.getElementById('viewer-area').clientWidth - 40;
-    const unscaledViewport = page.getViewport({scale: 1});
-    const scale = containerWidth / unscaledViewport.width;
-    const viewport = page.getViewport({scale: scale});
-    
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-    await page.render({canvasContext: context, viewport: viewport}).promise;
-    document.getElementById('loader').style.display = 'none';
-    canvas.style.display = 'block';
-    document.getElementById('dlBtn').style.display = 'flex';
-    document.getElementById('printBtn').style.display = 'flex';
+    try {
+        const binary = window.atob(base64);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        
+        const pdf = await pdfjsLib.getDocument({data: bytes}).promise;
+        const page = await pdf.getPage(1);
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
+        
+        const containerWidth = document.getElementById('viewer-area').clientWidth - 40;
+        const unscaledViewport = page.getViewport({scale: 1});
+        const scale = containerWidth / unscaledViewport.width;
+        const viewport = page.getViewport({scale: scale});
+        
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        await page.render({canvasContext: context, viewport: viewport}).promise;
+        document.getElementById('loader').style.display = 'none';
+        canvas.style.display = 'block';
+        document.getElementById('dlBtn').style.display = 'flex';
+    } catch (err) {
+        document.getElementById('loader').style.display = 'none';
+        alert("PDF Render Error: " + err.message);
+    }
 }
 
-/**
- * FIXED ZIP: PARALLEL PROCESSING & LOCK
- */
 async function downloadBatchZip() {
     if (isZipLoading) return alert("A download is already active.");
-    
     const batchId = document.getElementById('batchSelect').value;
     const batchText = document.getElementById('batchSelect').options[document.getElementById('batchSelect').selectedIndex].text;
     if(!batchId) return alert("Select a batch first.");
@@ -154,13 +167,12 @@ async function downloadBatchZip() {
     loader.style.display = 'block';
     barWrap.style.display = 'block';
     bar.style.width = "0%";
-    loader.innerText = "🚀 Initializing Parallel Fetch...";
+    loader.innerText = "🚀 Starting Parallel Fetch...";
 
     try {
         const fileList = await fetch(`${API_URL}?action=getFilesInBatch&args=${encodeURIComponent(JSON.stringify([batchId]))}`).then(r => r.json());
         const zip = new JSZip();
-        
-        const chunkSize = 5; // 5 parallel downloads
+        const chunkSize = 5; 
         let completed = 0;
 
         for (let i = 0; i < fileList.length; i += chunkSize) {
@@ -175,7 +187,7 @@ async function downloadBatchZip() {
             }));
         }
 
-        loader.innerText = "📦 Finalizing Zip...";
+        loader.innerText = "📦 Saving Zip...";
         const content = await zip.generateAsync({type:"blob"});
         saveAs(content, `Batch_${batchText}.zip`);
         showToast("✅ ZIP Downloaded Successfully!");
@@ -187,46 +199,25 @@ async function downloadBatchZip() {
     }
 }
 
-/**
- * FIXED PRINT: MOBILE & DESKTOP COMPATIBLE
- */
-function printFile() {
-    if(!currentFile) return;
-    const binary = window.atob(currentFile.bytes);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const blob = new Blob([bytes], {type: 'application/pdf'});
-    const url = URL.createObjectURL(blob);
-    
-    if (window.innerWidth > 1024) {
-        const pFrame = document.getElementById('print-frame');
-        pFrame.src = url;
-        pFrame.onload = () => {
-            pFrame.contentWindow.focus();
-            pFrame.contentWindow.print();
-        };
-    } else {
-        // Mobile fallback
-        const win = window.open(url, '_blank');
-        win.focus();
-    }
-}
-
 function initiateDownload() {
     if(!currentFile) return;
-    const binary = window.atob(currentFile.bytes);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const blob = new Blob([bytes], {type: 'application/pdf'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = currentFile.name || "certificate.pdf";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast("✅ PDF Downloaded!");
+    try {
+        const binary = window.atob(currentFile.bytes);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], {type: 'application/pdf'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFile.name || "certificate.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("✅ PDF Downloaded!");
+    } catch(e) {
+        alert("Download Failed: " + e.message);
+    }
 }
 
 function showToast(msg) {
