@@ -1,167 +1,199 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vinayaka Certificate Portal</title>
+    <title>Vinayaka Portal | Aadil Solutions</title>
     
     <link rel="icon" type="image/x-icon" href="logo1.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --text-main: #f8fafc;
-            --nav-height: 70px;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --bg-deep: #0b0e14;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --info: #38bdf8;
+            --ctrl-height: 40px;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { 
             margin: 0; padding: 0; height: 100%; width: 100%;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background-color: var(--bg-dark); color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-deep); color: #fff;
             display: flex; flex-direction: column; overflow: hidden; 
         }
 
-        /* --- MODERN LOGIN --- */
-        #login-screen { 
-            position: fixed; inset: 0; 
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
-            display: flex; align-items: center; justify-content: center; z-index: 9999; 
-        }
+        /* --- LOGIN --- */
+        #login-screen { position: fixed; inset: 0; background: radial-gradient(circle at 50% -20%, #1e2631, #0b0e14); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .login-card { 
-            background: var(--card-bg); backdrop-filter: blur(12px);
-            padding: 40px; border-radius: 24px; width: 90%; max-width: 400px; 
-            text-align: center; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-        }
-        .login-card img { height: 90px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--accent)); }
-        .login-card input { 
-            width: 100%; padding: 14px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 12px; font-size: 16px; background: rgba(0,0,0,0.2); color: white; outline: none;
-        }
-        .login-card input:focus { border-color: var(--accent); }
+        background: var(--glass); 
+        backdrop-filter: blur(20px);
+        padding: 50px 35px; /* Increased padding for a larger card feel */
+        border-radius: 30px; 
+        width: 90%; 
+        max-width: 420px; 
+        text-align: center; 
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
 
-        /* --- SMART NAVIGATION --- */
-        nav { 
-            height: auto; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px);
-            padding: 10px 20px; display: none; align-items: center; 
-            border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 100; 
-        }
-        .nav-container { display: flex; flex-direction: column; width: 100%; gap: 10px; }
-        .nav-top { display: flex; justify-content: space-between; align-items: center; }
-        .nav-bottom { display: flex; flex-direction: column; gap: 10px; }
+    /* Larger Input Boxes */
+    .login-card input { 
+        width: 100%; 
+        padding: 18px 22px; /* Extra large padding */
+        margin: 12px 0; 
+        border: 1px solid var(--glass-border); 
+        border-radius: 16px; 
+        font-size: 18px; /* Larger text for better readability */
+        background: rgba(0,0,0,0.4); 
+        color: white; 
+        outline: none;
+        transition: 0.3s;
+    }
+    
+    .login-card input:focus {
+        border-color: var(--primary);
+        background: rgba(0,0,0,0.5);
+        box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    /* Smaller, Refined Button */
+    .btn-login-submit { 
+        width: 160px; /* Fixed smaller width */
+        padding: 12px 0; 
+        margin-top: 25px; 
+        border-radius: 50px; /* Pill shape */
+        border: none; 
+        background: var(--primary); 
+        color: white; 
+        font-weight: 700; 
+        font-size: 14px; 
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn-login-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px var(--primary-glow);
+    }
+        .login-card img { height: 75px; margin-bottom: 10px; filter: drop-shadow(0 0 15px var(--primary-glow)); }
+
+        /* --- NAVIGATION --- */
+        nav { background: rgba(11, 14, 20, 0.85); backdrop-filter: blur(20px); padding: 8px 20px; display: none; flex-direction: column; border-bottom: 1px solid var(--glass-border); z-index: 100; }
+        .nav-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; }
+        .logo-nav { height: 32px; margin-right: 20px; }
+        .welcome-txt { font-size: 14px; color: var(--info); font-weight: 600; }
+
+        .nav-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .search-container { grid-column: span 2; position: relative; display: none; }
         
-        .logo-nav { height: 40px; }
-        select, .search-box { 
-            padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
-            font-size: 14px; background: #1e293b; color: white; outline: none; width: 100%;
+        select, .search-box, .action-btn { 
+            height: var(--ctrl-height) !important; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 14px; background: #1e293b; color: #f1f5f9; outline: none; width: 100%; font-weight: 500; display: flex; align-items: center;
         }
 
-        /* --- SEARCH LIST --- */
-        .search-container { position: relative; width: 100%; }
-        #searchSuggestions {
-            position: absolute; top: 100%; left: 0; width: 100%;
-            background: #1e293b; border-radius: 0 0 12px 12px;
-            max-height: 280px; overflow-y: auto; z-index: 1000;
-            display: none; list-style: none; padding: 0; margin: 0; border: 1px solid var(--accent);
-        }
-        .suggestion-item { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
-        .suggestion-item:hover { background: var(--accent); }
+        .search-box { padding-left: 40px !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; background-size: 20px; }
 
-        /* --- MAIN VIEWER --- */
-        #viewer-area { 
-            flex: 1; overflow: auto; display: flex; flex-direction: column; 
-            align-items: center; padding: 20px 10px; background: #020617; 
-        }
-        canvas { 
-            background: white; border-radius: 4px; 
-            box-shadow: 0 0 40px rgba(0,0,0,0.5); display: none; 
-            max-width: 100%; height: auto !important; 
-        }
+        #searchSuggestions { position: absolute; top: 100%; left: 0; width: 100%; background: #1e293b; border-radius: 12px; margin-top: 5px; max-height: 280px; overflow-y: auto; z-index: 1000; display: none; list-style: none; padding: 0; border: 1px solid var(--primary); }
+        .suggestion-item { padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .suggestion-item:hover { background: var(--primary); padding-left: 25px; }
 
-        /* --- MODERN FOOTER --- */
-        footer { 
-            padding: 15px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1);
-            display: none; align-items: center; justify-content: center; gap: 12px; font-size: 12px; 
-        }
-        .logo-footer { height: 28px; opacity: 0.8; }
+        /* ZIP PROGRESS BAR */
+        #zip-progress { display: none; grid-column: span 2; width: 100%; background: rgba(255,255,255,0.1); border-radius: 6px; height: 6px; overflow: hidden; margin-top: -5px; }
+        #zip-bar { width: 0%; height: 100%; background: var(--success); transition: width 0.3s; }
 
         /* BUTTONS */
-        button { 
-            padding: 12px 20px; border-radius: 12px; border: none; 
-            font-weight: 600; cursor: pointer; transition: all 0.2s; 
-        }
-        .btn-primary { background: var(--accent); color: #0f172a; }
-        .btn-primary:hover { background: var(--accent-hover); }
-        .btn-success { background: var(--success); color: white; display: none; }
-        .btn-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); padding: 8px 15px; }
+        .action-btn { border: none; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .btn-zip { background: var(--primary); color: white; display: none; }
+        .btn-dl { background: var(--success); color: white; display: none; }
+        .btn-print { background: var(--info); color: white; display: none; }
+        .btn-logout { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 6px 15px; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* VIEWER */
+        #viewer-area { flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; padding: 15px; background: #080a0f; }
+        canvas { background: #fff; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); display: none; max-width: 100%; height: auto !important; }
 
-        /* DESKTOP VIEW */
+        /* SUCCESS TOAST */
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 25px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.3); display: none; z-index: 10000; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
+
         @media (min-width: 1024px) {
-            .nav-container { flex-direction: row; align-items: center; justify-content: space-between; }
-            .nav-bottom { flex-direction: row; align-items: center; flex: 1; margin-left: 30px; }
-            select, .search-box, .search-container { width: 220px; }
-            canvas { width: 850px !important; }
+            nav { flex-direction: row; height: 60px; padding: 0 40px; }
+            .nav-header { width: auto; margin: 0; }
+            .nav-controls { display: flex; flex: 1; margin: 0 30px; justify-content: center; gap: 15px; }
+            select, .search-container { width: 220px; }
+            .action-btn { width: auto; padding: 0 20px; }
+            #zip-progress { position: absolute; bottom: 0; left: 0; border-radius: 0; height: 3px; }
         }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <div class="login-card">
-            <img src="logo1.ico" alt="Logo">
-            <h2 style="margin:0 0 5px 0; font-size: 1.5rem;">Vinayaka Fundamental Research & Education Society</h2>
-            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Aadil Solutions</p>
-            <input type="text" id="uid" placeholder="Username">
-            <input type="password" id="pass" placeholder="Password">
-            <button onclick="handleLogin()" class="btn-primary" style="width: 100%; margin-top: 15px;">Sign In</button>
-            <p id="msg" style="color:var(--danger); font-size: 0.8rem; margin-top: 15px;"></p>
-        </div>
+    <div class="login-card">
+        <img src="logo1.ico" alt="Logo">
+        <h2 style="margin:0; font-size: 1.8rem; letter-spacing: -1px;">Vinayaka Portal</h2>
+        
+        
+        <input type="text" id="uid" placeholder="Username" spellcheck="false">
+        <input type="password" id="pass" placeholder="Password">
+        
+        <button onclick="handleLogin()" class="btn-login-submit">Sign In</button>
+        
+        <p id="msg" style="color:#ef4444; font-size: 0.85rem; margin-top: 20px; min-height: 1.2em;"></p>
+<p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">&Copy; Aadil Solutions</p>
     </div>
+</div>
 
     <nav id="navbar">
-        <div class="nav-container">
-            <div class="nav-top">
+        <div class="nav-header">
+            <div style="display:flex; align-items:center;">
                 <img src="logo1.ico" alt="Logo" class="logo-nav">
-                <button class="btn-danger" onclick="handleLogout()">Logout</button>
+                <span id="welcomeUser" class="welcome-txt"></span>
             </div>
-            <div class="nav-bottom">
-                <div class="search-container" id="adminSearchWrap">
-                    <input type="text" id="searchBox" class="search-box" placeholder="Search files..." disabled oninput="debounceSearch()">
-                    <ul id="searchSuggestions"></ul>
-                </div>
-                <select id="batchSelect" onchange="loadCandidates()">
-                    <option value="">Select Batch</option>
-                </select>
-                <select id="candSelect" onchange="fetchFile(this.value)">
-                    <option value="">Candidates</option>
-                </select>
-                <button id="dlBtn" class="btn-success" onclick="initiateDownload()">Download PDF</button>
+            <button class="btn-logout" onclick="location.reload()">Logout</button>
+        </div>
+        <div class="nav-controls">
+            <div class="search-container" id="adminSearchWrap">
+                <input type="text" id="searchBox" class="search-box" placeholder="Loading..." disabled oninput="debounceSearch()">
+                <ul id="searchSuggestions"></ul>
             </div>
+            <select id="batchSelect" onchange="loadCandidates()"><option value="">Select Batch</option></select>
+            <button id="zipBtn" class="action-btn btn-zip" onclick="downloadBatchZip()">Download ZIP</button>
+            <div id="zip-progress"><div id="zip-bar"></div></div>
+            <select id="candSelect" onchange="fetchFile(this.value)"><option value="">Candidates</option></select>
+            <button id="dlBtn" class="action-btn btn-dl" onclick="initiateDownload()">Download</button>
+            <button id="printBtn" class="action-btn btn-print" onclick="printFile()">Print</button>
         </div>
     </nav>
 
     <div id="viewer-area">
-        <div id="loader" class="loader"></div>
-        <div id="welcome-msg" style="text-align:center; padding: 40px; color: #64748b;">
-            <h3 style="color: var(--accent);">WELCOME</h3>
-            <p>Select a candidate or search to view certificate</p>
+        <div id="loader" style="display:none; color:var(--primary); font-weight: bold; margin: 20px;">⏳ Processing...</div>
+        <div id="welcome-msg" style="text-align:center; padding: 60px; color: var(--text-muted);">
+            <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
+            <p>Select a record to begin</p>
         </div>
         <canvas id="pdfCanvas"></canvas>
     </div>
 
-    <footer id="footer">
-        <img src="logo.ico" alt="Logo" class="logo-footer">
-        <span>&copy; 2026 Aadil Solutions </span>
+    <div id="toast">✅ Download Complete!</div>
+    <iframe id="print-frame" style="display:none;"></iframe>
+
+    <footer style="padding:10px; background:var(--bg-deep); border-top:1px solid var(--glass-border); display:none; justify-content:center; font-size:10px; color:var(--text-muted);" id="footer">
+<img src="logo.ico" alt="Logo" class="logo-footer">
+         © 2026 Aadil Solutions 
     </footer>
 
     <script src="script.js"></script>
