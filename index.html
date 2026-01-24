@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vinayaka Portal</title>
+    <title>Vinayaka Portal | Aadil Solutions</title>
     
     <link rel="icon" type="image/x-icon" href="logo1.ico">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -35,60 +35,11 @@
 
         /* --- LOGIN --- */
         #login-screen { position: fixed; inset: 0; background: radial-gradient(circle at 50% -20%, #1e2631, #0b0e14); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { 
-        background: var(--glass); 
-        backdrop-filter: blur(20px);
-        padding: 50px 35px; /* Increased padding for a larger card feel */
-        border-radius: 30px; 
-        width: 90%; 
-        max-width: 420px; 
-        text-align: center; 
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-    }
-
-    /* Larger Input Boxes */
-    .login-card input { 
-        width: 100%; 
-        padding: 18px 22px; /* Extra large padding */
-        margin: 12px 0; 
-        border: 1px solid var(--glass-border); 
-        border-radius: 16px; 
-        font-size: 18px; /* Larger text for better readability */
-        background: rgba(0,0,0,0.4); 
-        color: white; 
-        outline: none;
-        transition: 0.3s;
-    }
-    
-    .login-card input:focus {
-        border-color: var(--primary);
-        background: rgba(0,0,0,0.5);
-        box-shadow: 0 0 15px var(--primary-glow);
-    }
-
-    /* Smaller, Refined Button */
-    .btn-login-submit { 
-        width: 160px; /* Fixed smaller width */
-        padding: 12px 0; 
-        margin-top: 25px; 
-        border-radius: 50px; /* Pill shape */
-        border: none; 
-        background: var(--primary); 
-        color: white; 
-        font-weight: 700; 
-        font-size: 14px; 
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .btn-login-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px var(--primary-glow);
-    }
+        .login-card { background: var(--glass); backdrop-filter: blur(20px); padding: 50px 35px; border-radius: 30px; width: 90%; max-width: 420px; text-align: center; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         .login-card img { height: 75px; margin-bottom: 10px; filter: drop-shadow(0 0 15px var(--primary-glow)); }
+        .login-card input { width: 100%; padding: 18px 22px; margin: 12px 0; border: 1px solid var(--glass-border); border-radius: 16px; font-size: 18px; background: rgba(0,0,0,0.4); color: white; outline: none; transition: 0.3s; }
+        .login-card input:focus { border-color: var(--primary); background: rgba(0,0,0,0.5); box-shadow: 0 0 15px var(--primary-glow); }
+        .btn-login-submit { width: 160px; padding: 12px 0; margin-top: 25px; border-radius: 50px; border: none; background: var(--primary); color: white; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; }
 
         /* --- NAVIGATION --- */
         nav { background: rgba(11, 14, 20, 0.85); backdrop-filter: blur(20px); padding: 8px 20px; display: none; flex-direction: column; border-bottom: 1px solid var(--glass-border); z-index: 100; }
@@ -110,24 +61,18 @@
         .suggestion-item { padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; transition: 0.2s; }
         .suggestion-item:hover { background: var(--primary); padding-left: 25px; }
 
-        /* ZIP PROGRESS BAR */
         #zip-progress { display: none; grid-column: span 2; width: 100%; background: rgba(255,255,255,0.1); border-radius: 6px; height: 6px; overflow: hidden; margin-top: -5px; }
         #zip-bar { width: 0%; height: 100%; background: var(--success); transition: width 0.3s; }
 
-        /* BUTTONS */
         .action-btn { border: none; justify-content: center; cursor: pointer; transition: 0.3s; }
         .btn-zip { background: var(--primary); color: white; display: none; }
         .btn-dl { background: var(--success); color: white; display: none; }
-        .btn-print { background: var(--info); color: white; display: none; }
         .btn-logout { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 6px 15px; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-        /* VIEWER */
         #viewer-area { flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; padding: 15px; background: #080a0f; }
         canvas { background: #fff; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); display: none; max-width: 100%; height: auto !important; }
 
-        /* SUCCESS TOAST */
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 25px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.3); display: none; z-index: 10000; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 25px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.3); display: none; z-index: 10000; }
 
         @media (min-width: 1024px) {
             nav { flex-direction: row; height: 60px; padding: 0 40px; }
@@ -142,20 +87,16 @@
 <body>
 
     <div id="login-screen">
-    <div class="login-card">
-        <img src="logo1.ico" alt="Logo">
-        <h2 style="margin:0; font-size: 1.8rem; letter-spacing: -1px;">Vinayaka Portal</h2>
-        
-        
-        <input type="text" id="uid" placeholder="Username" spellcheck="false">
-        <input type="password" id="pass" placeholder="Password">
-        
-        <button onclick="handleLogin()" class="btn-login-submit">Sign In</button>
-        
-        <p id="msg" style="color:#ef4444; font-size: 0.85rem; margin-top: 20px; min-height: 1.2em;"></p>
-<p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">© Aadil Solutions</p>
+        <div class="login-card">
+            <img src="logo1.ico" alt="Logo">
+            <h2 style="margin:0; font-size: 1.8rem; letter-spacing: -1px;">Vinayaka Portal</h2>
+            <input type="text" id="uid" placeholder="Username" spellcheck="false">
+            <input type="password" id="pass" placeholder="Password">
+            <button onclick="handleLogin()" class="btn-login-submit">Sign In</button>
+            <p id="msg" style="color:#ef4444; font-size: 0.85rem; margin-top: 20px; min-height: 1.2em;"></p>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">© Aadil Solutions</p>
+        </div>
     </div>
-</div>
 
     <nav id="navbar">
         <div class="nav-header">
@@ -175,7 +116,6 @@
             <div id="zip-progress"><div id="zip-bar"></div></div>
             <select id="candSelect" onchange="fetchFile(this.value)"><option value="">Candidates</option></select>
             <button id="dlBtn" class="action-btn btn-dl" onclick="initiateDownload()">Download</button>
-            
         </div>
     </nav>
 
@@ -189,17 +129,12 @@
     </div>
 
     <div id="toast">✅ Download Complete!</div>
-    <iframe id="print-frame" style="display:none;"></iframe>
 
-    <footer style="padding:10px; background:var(--bg-deep); border-top:1px solid var(--glass-border); display:none; justify-content:center; font-size:10px; color:var(--text-muted);" id="footer">
-<img src="logo.ico" alt="Logo" class="logo-footer" height="15px" width="15px">
-         &nbsp;&nbsp;© 2026 Aadil Solutions 
+    <footer style="padding:10px; background:var(--bg-deep); border-top:1px solid var(--glass-border); display:none; justify-content:center; align-items:center; font-size:10px; color:var(--text-muted);" id="footer">
+        <img src="logo.ico" alt="Logo" height="15px" width="15px" style="margin-right:8px;">
+        © 2026 Aadil Solutions 
     </footer>
 
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
