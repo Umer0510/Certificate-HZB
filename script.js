@@ -1,5 +1,6 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxH8HsN9yZPz1XE7rxoE4deEZeuRyOSvOe0S4Ngi8zjXOvi67cS3HjijoWoHpayKtwX/exec"; 
 let userRole = "", masterIndex = [], currentFile = null, searchTimer;
+let isZipLoading = false; 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
@@ -14,37 +15,43 @@ async function handleLogin() {
         const res = await fetch(`${API_URL}?action=checkLogin&args=${encodeURIComponent(JSON.stringify([id,ps]))}`).then(r => r.json());
         if (res && res.role) {
             userRole = res.role;
+            document.getElementById('welcomeUser').innerText = `Welcome, ${id}`;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('navbar').style.display = 'flex';
             document.getElementById('footer').style.display = 'flex';
             setupPortal();
-        } else { msg.innerText = "Access Denied: Invalid Credentials"; }
+        } else { msg.innerText = "Invalid Credentials"; }
     } catch(e) { msg.innerText = "Connection Failed"; }
 }
 
 async function setupPortal() {
     fetch(`${API_URL}?action=getBatches&args=[]`).then(r => r.json()).then(data => {
         const bSel = document.getElementById('batchSelect');
-        bSel.innerHTML = '<option value="">Batch</option>';
+        bSel.innerHTML = '<option value="">Select Batch</option>';
         data.forEach(b => bSel.add(new Option(b.name, b.id)));
     });
 
     if (userRole === 'admin') {
         document.getElementById('adminSearchWrap').style.display = 'block';
-        const cache = localStorage.getItem('vms_premium_cache');
-        if (cache) { masterIndex = JSON.parse(cache); enableSearch(); }
-        fetch(`${API_URL}?action=getFullIndex&args=[]`).then(r => r.json()).then(data => {
-            masterIndex = data;
-            localStorage.setItem('vms_premium_cache', JSON.stringify(data));
-            enableSearch();
-        });
+        document.getElementById('zipBtn').style.display = 'flex';
+        const sBox = document.getElementById('searchBox');
+        
+        const sessionData = sessionStorage.getItem('vms_session_index');
+        if (sessionData) {
+            masterIndex = JSON.parse(sessionData);
+            sBox.disabled = false;
+            sBox.placeholder = `Search ${masterIndex.length} records...`;
+            sBox.focus();
+        } else {
+            fetch(`${API_URL}?action=getFullIndex&args=[]`).then(r => r.json()).then(data => {
+                masterIndex = data;
+                sessionStorage.setItem('vms_session_index', JSON.stringify(data));
+                sBox.disabled = false;
+                sBox.placeholder = `Search ${data.length} records...`;
+                sBox.focus();
+            });
+        }
     }
-}
-
-function enableSearch() {
-    const sBox = document.getElementById('searchBox');
-    sBox.disabled = false;
-    sBox.placeholder = `Search ${masterIndex.length} records...`;
 }
 
 function debounceSearch() {
@@ -58,7 +65,7 @@ function executeSearch() {
     list.innerHTML = '';
     if (query.length < 2) { list.style.display = 'none'; return; }
 
-    const matches = masterIndex.filter(f => f.name.toLowerCase().includes(query)).slice(0, 30);
+    const matches = masterIndex.filter(f => f.name.toLowerCase().includes(query)).slice(0, 40);
     if (matches.length > 0) {
         list.style.display = 'block';
         matches.forEach(m => {
@@ -79,22 +86,31 @@ async function loadCandidates() {
     const batchId = document.getElementById('batchSelect').value;
     const cSel = document.getElementById('candSelect');
     if(!batchId) return;
-    cSel.innerHTML = '<option value="">...</option>';
-    const data = await fetch(`${API_URL}?action=getFilesInBatch&args=${encodeURIComponent(JSON.stringify([batchId]))}`).then(r => r.json());
-    cSel.innerHTML = '<option value="">Candidates</option>';
-    data.forEach(c => cSel.add(new Option(c.name, c.id)));
+
+    cSel.disabled = true;
+    cSel.innerHTML = '<option value="">⏳ Loading...</option>';
+    
+    try {
+        const data = await fetch(`${API_URL}?action=getFilesInBatch&args=${encodeURIComponent(JSON.stringify([batchId]))}`).then(r => r.json());
+        cSel.innerHTML = '<option value="">Select Candidate</option>';
+        data.forEach(c => cSel.add(new Option(c.name, c.id)));
+    } catch(e) { cSel.innerHTML = '<option value="">❌ Error</option>'; }
+    finally { cSel.disabled = false; }
 }
 
 async function fetchFile(id) {
     document.getElementById('loader').style.display = 'block';
+    document.getElementById('loader').innerText = "⚡ Fetching PDF...";
     document.getElementById('welcome-msg').style.display = 'none';
     document.getElementById('pdfCanvas').style.display = 'none';
     document.getElementById('dlBtn').style.display = 'none';
+    document.getElementById('printBtn').style.display = 'none';
+
     try {
-        const res = await fetch(`${API_URL}?action=getFileBytes&args=${encodeURIComponent(JSON.stringify([id]))}`).then(r => r.json());
+        const res = await fetch(`${API_URL}?action=getFileBytes&args=${encodeURIComponent(JSON.stringify([id]))}`, { priority: 'high' }).then(r => r.json());
         currentFile = res;
         renderPdf(res.bytes);
-    } catch(e) { alert("Error"); }
+    } catch(e) { alert("Load Failed"); }
 }
 
 async function renderPdf(base64) {
@@ -105,25 +121,103 @@ async function renderPdf(base64) {
     const page = await pdf.getPage(1);
     const canvas = document.getElementById('pdfCanvas');
     const context = canvas.getContext('2d');
+    
     const containerWidth = document.getElementById('viewer-area').clientWidth - 40;
     const unscaledViewport = page.getViewport({scale: 1});
     const scale = containerWidth / unscaledViewport.width;
     const viewport = page.getViewport({scale: scale});
+    
     canvas.height = viewport.height;
     canvas.width = viewport.width;
     await page.render({canvasContext: context, viewport: viewport}).promise;
     document.getElementById('loader').style.display = 'none';
     canvas.style.display = 'block';
-    document.getElementById('dlBtn').style.display = 'block';
+    document.getElementById('dlBtn').style.display = 'flex';
+    document.getElementById('printBtn').style.display = 'flex';
+}
+
+/**
+ * FIXED ZIP: PARALLEL PROCESSING & LOCK
+ */
+async function downloadBatchZip() {
+    if (isZipLoading) return alert("A download is already active.");
+    
+    const batchId = document.getElementById('batchSelect').value;
+    const batchText = document.getElementById('batchSelect').options[document.getElementById('batchSelect').selectedIndex].text;
+    if(!batchId) return alert("Select a batch first.");
+
+    isZipLoading = true;
+    const loader = document.getElementById('loader');
+    const barWrap = document.getElementById('zip-progress');
+    const bar = document.getElementById('zip-bar');
+    
+    loader.style.display = 'block';
+    barWrap.style.display = 'block';
+    bar.style.width = "0%";
+    loader.innerText = "🚀 Initializing Parallel Fetch...";
+
+    try {
+        const fileList = await fetch(`${API_URL}?action=getFilesInBatch&args=${encodeURIComponent(JSON.stringify([batchId]))}`).then(r => r.json());
+        const zip = new JSZip();
+        
+        const chunkSize = 5; // 5 parallel downloads
+        let completed = 0;
+
+        for (let i = 0; i < fileList.length; i += chunkSize) {
+            const chunk = fileList.slice(i, i + chunkSize);
+            await Promise.all(chunk.map(async (file) => {
+                const fData = await fetch(`${API_URL}?action=getFileBytes&args=${encodeURIComponent(JSON.stringify([file.id]))}`).then(r => r.json());
+                zip.file(`${file.name}.pdf`, fData.bytes, {base64: true});
+                completed++;
+                const pct = Math.round((completed / fileList.length) * 100);
+                bar.style.width = pct + "%";
+                loader.innerText = `📥 Downloading: ${completed}/${fileList.length}`;
+            }));
+        }
+
+        loader.innerText = "📦 Finalizing Zip...";
+        const content = await zip.generateAsync({type:"blob"});
+        saveAs(content, `Batch_${batchText}.zip`);
+        showToast("✅ ZIP Downloaded Successfully!");
+    } catch(e) { alert("Error: " + e.message); }
+    finally {
+        isZipLoading = false;
+        loader.style.display = 'none';
+        barWrap.style.display = 'none';
+    }
+}
+
+/**
+ * FIXED PRINT: MOBILE & DESKTOP COMPATIBLE
+ */
+function printFile() {
+    if(!currentFile) return;
+    const binary = window.atob(currentFile.bytes);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], {type: 'application/pdf'});
+    const url = URL.createObjectURL(blob);
+    
+    if (window.innerWidth > 1024) {
+        const pFrame = document.getElementById('print-frame');
+        pFrame.src = url;
+        pFrame.onload = () => {
+            pFrame.contentWindow.focus();
+            pFrame.contentWindow.print();
+        };
+    } else {
+        // Mobile fallback
+        const win = window.open(url, '_blank');
+        win.focus();
+    }
 }
 
 function initiateDownload() {
     if(!currentFile) return;
-    const byteCharacters = atob(currentFile.bytes);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], {type: 'application/pdf'});
+    const binary = window.atob(currentFile.bytes);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], {type: 'application/pdf'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -132,9 +226,15 @@ function initiateDownload() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    showToast("✅ PDF Downloaded!");
 }
 
-function handleLogout() { location.reload(); }
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
 
 window.onclick = (e) => { 
     if (!e.target.closest('.search-container')) {
