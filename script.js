@@ -200,11 +200,27 @@ async function downloadBatchZip() {
 }
 
 function initiateDownload() {
-    if(!currentFile) return;
-    try {
+    if (!currentFile) return;
+
+    // 1. Check if running in a Mobile WebView (APK) environment
+    const isWebView = navigator.userAgent.includes('wv') || (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('Safari'));
+    
+    if (isWebView || window.innerWidth < 1024) {
+        // GOOGLE DRIVE DIRECT DOWNLOAD BYPASS
+        // This converts the view link to a direct file download link
+        // Note: This requires your Google Script to return the FileID 
+        const fileId = currentFile.id; 
+        const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        
+        // Open in external browser - this forces the APK to hand off the task
+        window.open(directUrl, '_system'); 
+        showToast("🚀 Opening Download in Browser...");
+    } else {
+        // STANDARD DESKTOP BLOB DOWNLOAD
         const binary = window.atob(currentFile.bytes);
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        
         const blob = new Blob([bytes], {type: 'application/pdf'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -215,8 +231,6 @@ function initiateDownload() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showToast("✅ PDF Downloaded!");
-    } catch(e) {
-        alert("Download Failed: " + e.message);
     }
 }
 
@@ -232,3 +246,4 @@ window.onclick = (e) => {
         document.getElementById('searchSuggestions').style.display = 'none';
     } 
 };
+
