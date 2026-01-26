@@ -4,6 +4,23 @@ let isZipLoading = false;
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
+// Check if running in WebView/APK
+const isAndroidApp = () => {
+    return /Android/i.test(navigator.userAgent) && 
+           !/Chrome/i.test(navigator.userAgent) || 
+           typeof Android !== 'undefined';
+};
+
+// Check if running in iOS
+const isIOSApp = () => {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent) && 
+           !/Safari/i.test(navigator.userAgent) ||
+           (window.webkit && window.webkit.messageHandlers);
+};
+
+// Check if we're in a mobile WebView
+const isMobileApp = () => isAndroidApp() || isIOSApp();
+
 async function handleLogin() {
     const id = document.getElementById('uid').value;
     const ps = document.getElementById('pass').value;
@@ -189,7 +206,21 @@ async function downloadBatchZip() {
 
         loader.innerText = "📦 Saving Zip...";
         const content = await zip.generateAsync({type:"blob"});
-        saveAs(content, `Batch_${batchText}.zip`);
+        
+        // Universal download for ZIP
+        if (isMobileApp()) {
+            // For mobile apps, use a different approach
+            const reader = new FileReader();
+            reader.onload = function() {
+                const base64Zip = reader.result.split(',')[1];
+                downloadFileUniversal(`${batchText}_batch.zip`, base64Zip, 'application/zip');
+            };
+            reader.readAsDataURL(content);
+        } else {
+            // For regular browsers
+            saveAs(content, `Batch_${batchText}.zip`);
+        }
+        
         showToast("✅ ZIP Downloaded Successfully!");
     } catch(e) { alert("Error: " + e.message); }
     finally {
@@ -199,30 +230,147 @@ async function downloadBatchZip() {
     }
 }
 
-function initiateDownload() {
+// Universal download function for all platforms
+function downloadCurrentFile() {
     if (!currentFile) return;
-
-    // Convert the PDF bytes to a Base64 string
+    
     const base64Data = currentFile.bytes; 
     const fileName = currentFile.name || "certificate.pdf";
-    const mimeType = "application/pdf";
+    
+    // Show downloading toast
+    showToast("⏳ Downloading PDF...");
+    
+    // Use universal download function
+    downloadFileUniversal(fileName, base64Data, 'application/pdf');
+}
 
-    // Check if the "Android" bridge exists (only true inside your APK)
-    if (window.Android && window.Android.downloadFile) {
-        // Send the data directly to the APK
-        window.Android.downloadFile(base64Data, fileName, mimeType);
-        showToast("⏳ Processing in App...");
+// Main universal download function
+function downloadFileUniversal(fileName, base64Data, mimeType) {
+    // Decode base64 to binary
+    const binary = window.atob(base64Data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    
+    // Create blob
+    const blob = new Blob([bytes], { type: mimeType });
+    
+    if (isMobileApp()) {
+        // For mobile WebView/APK - use multiple fallback methods
+        downloadForMobileApp(fileName, blob, bytes);
     } else {
-        // Fallback for regular browsers
-        const binary = window.atob(base64Data);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        const blob = new Blob([bytes], {type: mimeType});
+        // For regular browsers (Desktop & Mobile Safari/Chrome)
+        downloadForBrowser(fileName, blob);
+    }
+}
+
+// Download for regular browsers
+function downloadForBrowser(fileName, blob) {
+    try {
+        // Method 1: Use FileSaver.js (included)
+        saveAs(blob, fileName);
+        
+        // Method 2: Fallback to createObjectURL
+        setTimeout(() => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }, 100);
+        
+        showToast("✅ Download Started!");
+    } catch (error) {
+        console.error("Browser download failed:", error);
+        showToast("❌ Download Failed - Try Again");
+    }
+}
+
+// Download for Mobile App (WebView/APK)
+function downloadForMobileApp(fileName, blob, bytes) {
+    // Method 1: Try Android bridge if available
+    if (window.Android && window.Android.downloadFile) {
+        try {
+            // Convert to base64 for Android bridge
+            const base64 = btoa(String.fromCharCode(...bytes));
+            window.Android.downloadFile(base64, fileName, 'application/pdf');
+            showToast("⏳ Opening in App...");
+            return;
+        } catch (e) {
+            console.warn("Android bridge failed:", e);
+        }
+    }
+    
+    // Method 2: Try iOS bridge if available
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.downloadHandler) {
+        try {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const base64 = reader.result.split(',')[1];
+                window.webkit.messageHandlers.downloadHandler.postMessage({
+                    fileName: fileName,
+                    base64Data: base64,
+                    mimeType: 'application/pdf'
+                });
+            };
+            reader.readAsDataURL(blob);
+            showToast("⏳ Opening in App...");
+            return;
+        } catch (e) {
+            console.warn("iOS bridge failed:", e);
+        }
+    }
+    
+    // Method 3: Use blob URL with iframe (works in many WebViews)
+    try {
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
+        
+        // Try opening in new window/tab
+        const newWindow = window.open(url, '_blank');
+        if (newWindow) {
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            showToast("✅ Opening PDF...");
+        } else {
+            // If popup blocked, use iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                URL.revokeObjectURL(url);
+            }, 1000);
+            showToast("✅ PDF Loaded");
+        }
+    } catch (error) {
+        console.error("Mobile download failed:", error);
+        
+        // Method 4: Last resort - use data URL (limited size)
+        if (bytes.length < 10000000) { // 10MB limit
+            const reader = new FileReader();
+            reader.onload = function() {
+                const dataUrl = reader.result;
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = fileName;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+            reader.readAsDataURL(blob);
+        } else {
+            alert("File too large for mobile download. Please use desktop browser.");
+        }
     }
 }
 
@@ -239,4 +387,16 @@ window.onclick = (e) => {
     } 
 };
 
+// Handle Enter key in login
+document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
+        handleLogin();
+    }
+});
 
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus username field
+    const uidField = document.getElementById('uid');
+    if (uidField) uidField.focus();
+});
