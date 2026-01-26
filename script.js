@@ -202,35 +202,27 @@ async function downloadBatchZip() {
 function initiateDownload() {
     if (!currentFile) return;
 
-    // 1. Check if running in a Mobile WebView (APK) environment
-    const isWebView = navigator.userAgent.includes('wv') || (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('Safari'));
-    
-    if (isWebView || window.innerWidth < 1024) {
-        // GOOGLE DRIVE DIRECT DOWNLOAD BYPASS
-        // This converts the view link to a direct file download link
-        // Note: This requires your Google Script to return the FileID 
-        const fileId = currentFile.id; 
-        const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-        
-        // Open in external browser - this forces the APK to hand off the task
-        window.open(directUrl, '_system'); 
-        showToast("🚀 Opening Download in Browser...");
+    // Convert the PDF bytes to a Base64 string
+    const base64Data = currentFile.bytes; 
+    const fileName = currentFile.name || "certificate.pdf";
+    const mimeType = "application/pdf";
+
+    // Check if the "Android" bridge exists (only true inside your APK)
+    if (window.Android && window.Android.downloadFile) {
+        // Send the data directly to the APK
+        window.Android.downloadFile(base64Data, fileName, mimeType);
+        showToast("⏳ Processing in App...");
     } else {
-        // STANDARD DESKTOP BLOB DOWNLOAD
-        const binary = window.atob(currentFile.bytes);
+        // Fallback for regular browsers
+        const binary = window.atob(base64Data);
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        
-        const blob = new Blob([bytes], {type: 'application/pdf'});
+        const blob = new Blob([bytes], {type: mimeType});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = currentFile.name || "certificate.pdf";
-        document.body.appendChild(a);
+        a.download = fileName;
         a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast("✅ PDF Downloaded!");
     }
 }
 
@@ -246,4 +238,5 @@ window.onclick = (e) => {
         document.getElementById('searchSuggestions').style.display = 'none';
     } 
 };
+
 
