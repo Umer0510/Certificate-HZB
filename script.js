@@ -230,7 +230,7 @@ async function downloadBatchZip() {
     }
 }
 
-// Universal download function for all platforms
+/*// Universal download function for all platforms
 function downloadCurrentFile() {
     if (!currentFile) return;
     
@@ -385,7 +385,34 @@ window.onclick = (e) => {
     if (!e.target.closest('.search-container')) {
         document.getElementById('searchSuggestions').style.display = 'none';
     } 
-};
+};*/
+
+function initiateDownload() {
+    if (!currentFile || !currentFile.id) {
+        return alert("Error: File ID not found.");
+    }
+
+    // 1. Generate the Direct Link
+    const directLink = `https://drive.google.com/uc?export=download&id=${currentFile.id}`;
+
+    // 2. Identify environment
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // For APK/Mobile: We use window.open to hand the link to the system browser.
+        // This solves "Can only download HTTP/HTTPS URI's: blob" error.
+        window.open(directLink, '_blank');
+        showToast("🚀 Handing over to System Downloader...");
+    } else {
+        // For Desktop: Standard download link
+        const a = document.createElement('a');
+        a.href = directLink;
+        a.download = currentFile.name || "certificate.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+}
 
 // Handle Enter key in login
 document.addEventListener('keypress', function(e) {
@@ -400,3 +427,4 @@ document.addEventListener('DOMContentLoaded', function() {
     const uidField = document.getElementById('uid');
     if (uidField) uidField.focus();
 });
+
