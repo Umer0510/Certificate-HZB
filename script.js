@@ -1,26 +1,10 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxH8HsN9yZPz1XE7rxoE4deEZeuRyOSvOe0S4Ngi8zjXOvi67cS3HjijoWoHpayKtwX/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxEkOo8_FJEzIHRhhJtfBKcolxWzjueWTp7YMZCuTWWpeIcoocvbnawO1gVNl3DUif9/exec"; 
 let userRole = "", masterIndex = [], currentFile = null, searchTimer;
 let isZipLoading = false; 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-// Check if running in WebView/APK
-const isAndroidApp = () => {
-    return /Android/i.test(navigator.userAgent) && 
-           !/Chrome/i.test(navigator.userAgent) || 
-           typeof Android !== 'undefined';
-};
-
-// Check if running in iOS
-const isIOSApp = () => {
-    return /iPhone|iPad|iPod/i.test(navigator.userAgent) && 
-           !/Safari/i.test(navigator.userAgent) ||
-           (window.webkit && window.webkit.messageHandlers);
-};
-
-// Check if we're in a mobile WebView
-const isMobileApp = () => isAndroidApp() || isIOSApp();
-
+// ==================== LOGIN HANDLING ====================
 async function handleLogin() {
     const id = document.getElementById('uid').value;
     const ps = document.getElementById('pass').value;
@@ -41,18 +25,22 @@ async function handleLogin() {
     } catch(e) { msg.innerText = "Connection Failed"; }
 }
 
+// ==================== PORTAL SETUP ====================
 async function setupPortal() {
+    // Load batches
     fetch(`${API_URL}?action=getBatches&args=[]`).then(r => r.json()).then(data => {
         const bSel = document.getElementById('batchSelect');
         bSel.innerHTML = '<option value="">Select Batch</option>';
         data.forEach(b => bSel.add(new Option(b.name, b.id)));
     });
 
+    // Admin-specific features
     if (userRole === 'admin') {
         document.getElementById('adminSearchWrap').style.display = 'block';
         document.getElementById('zipBtn').style.display = 'flex';
         const sBox = document.getElementById('searchBox');
         
+        // Check session storage for cached index
         const sessionData = sessionStorage.getItem('vms_session_index');
         if (sessionData) {
             masterIndex = JSON.parse(sessionData);
@@ -60,6 +48,7 @@ async function setupPortal() {
             sBox.placeholder = `Search ${masterIndex.length} records...`;
             sBox.focus();
         } else {
+            // Fetch full index with Google Drive IDs
             fetch(`${API_URL}?action=getFullIndex&args=[]`).then(r => r.json()).then(data => {
                 masterIndex = data;
                 sessionStorage.setItem('vms_session_index', JSON.stringify(data));
@@ -71,6 +60,7 @@ async function setupPortal() {
     }
 }
 
+// ==================== SEARCH FUNCTIONALITY ====================
 function debounceSearch() {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(executeSearch, 300);
@@ -88,7 +78,7 @@ function executeSearch() {
         matches.forEach(m => {
             const li = document.createElement('li');
             li.className = 'suggestion-item';
-            li.innerHTML = `<strong>${m.name}</strong>`;
+            li.innerHTML = `<strong>${m.name}</strong> <span style="font-size:12px; color:#94a3b8;">${m.path}</span>`;
             li.onclick = () => {
                 document.getElementById('searchBox').value = m.name;
                 list.style.display = 'none';
@@ -99,6 +89,7 @@ function executeSearch() {
     } else { list.style.display = 'none'; }
 }
 
+// ==================== BATCH & CANDIDATE LOADING ====================
 async function loadCandidates() {
     const batchId = document.getElementById('batchSelect').value;
     const cSel = document.getElementById('candSelect');
@@ -115,6 +106,7 @@ async function loadCandidates() {
     finally { cSel.disabled = false; }
 }
 
+// ==================== FILE FETCHING ====================
 async function fetchFile(id) {
     const loader = document.getElementById('loader');
     loader.style.display = 'block';
@@ -127,7 +119,13 @@ async function fetchFile(id) {
         const response = await fetch(`${API_URL}?action=getFileBytes&args=${encodeURIComponent(JSON.stringify([id]))}`, { priority: 'high' });
         const res = await response.json();
         if (res && res.bytes) {
-            currentFile = res;
+            currentFile = {
+                id: res.id,
+                name: res.name,
+                bytes: res.bytes,
+                driveId: res.driveId,
+                directUrl: res.directUrl
+            };
             renderPdf(res.bytes);
         } else {
             throw new Error("Empty response");
@@ -138,6 +136,7 @@ async function fetchFile(id) {
     }
 }
 
+// ==================== PDF RENDERING ====================
 async function renderPdf(base64) {
     try {
         const binary = window.atob(base64);
@@ -170,6 +169,7 @@ async function renderPdf(base64) {
     }
 }
 
+// ==================== BATCH ZIP DOWNLOAD ====================
 async function downloadBatchZip() {
     if (isZipLoading) return alert("A download is already active.");
     const batchId = document.getElementById('batchSelect').value;
@@ -184,12 +184,12 @@ async function downloadBatchZip() {
     loader.style.display = 'block';
     barWrap.style.display = 'block';
     bar.style.width = "0%";
-    loader.innerText = "🚀 Starting Parallel Fetch...";
+    loader.innerText = "🚀 Speed Fetching...";
 
     try {
         const fileList = await fetch(`${API_URL}?action=getFilesInBatch&args=${encodeURIComponent(JSON.stringify([batchId]))}`).then(r => r.json());
         const zip = new JSZip();
-        const chunkSize = 5; 
+        const chunkSize = 5;
         let completed = 0;
 
         for (let i = 0; i < fileList.length; i += chunkSize) {
@@ -198,30 +198,23 @@ async function downloadBatchZip() {
                 const fData = await fetch(`${API_URL}?action=getFileBytes&args=${encodeURIComponent(JSON.stringify([file.id]))}`).then(r => r.json());
                 zip.file(`${file.name}.pdf`, fData.bytes, {base64: true});
                 completed++;
-                const pct = Math.round((completed / fileList.length) * 100);
-                bar.style.width = pct + "%";
-                loader.innerText = `📥 Downloading: ${completed}/${fileList.length}`;
+                bar.style.width = Math.round((completed / fileList.length) * 100) + "%";
             }));
         }
 
-        loader.innerText = "📦 Saving Zip...";
-        const content = await zip.generateAsync({type:"blob"});
-        
-        // Universal download for ZIP
-        if (isMobileApp()) {
-            // For mobile apps, use a different approach
-            const reader = new FileReader();
-            reader.onload = function() {
-                const base64Zip = reader.result.split(',')[1];
-                downloadFileUniversal(`${batchText}_batch.zip`, base64Zip, 'application/zip');
-            };
-            reader.readAsDataURL(content);
+        loader.innerText = "📦 Finalizing Zip...";
+        const contentBase64 = await zip.generateAsync({type:"base64"});
+        const fileName = `Batch_${batchText}.zip`;
+
+        // Mobile/APK handling
+        if (window.Android && window.Android.downloadFile) {
+            window.Android.downloadFile(contentBase64, fileName, "application/zip");
         } else {
-            // For regular browsers
-            saveAs(content, `Batch_${batchText}.zip`);
+            // Browser fallback
+            saveAs(await zip.generateAsync({type:"blob"}), fileName);
         }
         
-        showToast("✅ ZIP Downloaded Successfully!");
+        showToast("✅ ZIP Processed!");
     } catch(e) { alert("Error: " + e.message); }
     finally {
         isZipLoading = false;
@@ -230,150 +223,91 @@ async function downloadBatchZip() {
     }
 }
 
-/*// Universal download function for all platforms
-function downloadCurrentFile() {
-    if (!currentFile) return;
-    
-    const base64Data = currentFile.bytes; 
-    const fileName = currentFile.name || "certificate.pdf";
-    
-    // Show downloading toast
-    showToast("⏳ Downloading PDF...");
-    
-    // Use universal download function
-    downloadFileUniversal(fileName, base64Data, 'application/pdf');
+// ==================== SINGLE FILE DOWNLOAD ====================
+function initiateDownload() {
+    if (!currentFile) {
+        return alert("Error: No file selected.");
+    }
+
+    // Priority 1: Use direct Google Drive download link (fastest)
+    if (currentFile.directUrl) {
+        downloadViaDirectLink(currentFile.directUrl, currentFile.name);
+        return;
+    }
+
+    // Priority 2: Use Google Drive ID to construct link
+    if (currentFile.driveId) {
+        const directLink = `https://drive.google.com/uc?export=download&id=${currentFile.driveId}`;
+        downloadViaDirectLink(directLink, currentFile.name);
+        return;
+    }
+
+    // Fallback: Download from base64 data
+    downloadFromBase64();
 }
 
-// Main universal download function
-function downloadFileUniversal(fileName, base64Data, mimeType) {
-    // Decode base64 to binary
-    const binary = window.atob(base64Data);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
+function downloadViaDirectLink(url, fileName) {
+    showToast("🚀 Starting download...");
     
-    // Create blob
-    const blob = new Blob([bytes], { type: mimeType });
+    // Create download link
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || "certificate.pdf";
+    a.target = '_blank';
     
-    if (isMobileApp()) {
-        // For mobile WebView/APK - use multiple fallback methods
-        downloadForMobileApp(fileName, blob, bytes);
-    } else {
-        // For regular browsers (Desktop & Mobile Safari/Chrome)
-        downloadForBrowser(fileName, blob);
-    }
-}
-
-// Download for regular browsers
-function downloadForBrowser(fileName, blob) {
-    try {
-        // Method 1: Use FileSaver.js (included)
-        saveAs(blob, fileName);
+    // Different handling for mobile vs desktop
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // Mobile devices - open in new tab
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
         
-        // Method 2: Fallback to createObjectURL
+        // Also try to trigger system download
         setTimeout(() => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            
-            // Cleanup
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
+            window.location.href = url;
         }, 100);
-        
-        showToast("✅ Download Started!");
-    } catch (error) {
-        console.error("Browser download failed:", error);
-        showToast("❌ Download Failed - Try Again");
+    } else {
+        // Desktop - standard download
+        document.body.appendChild(a);
+        a.click();
     }
+    
+    // Cleanup
+    setTimeout(() => {
+        if (a.parentNode) document.body.removeChild(a);
+    }, 1000);
+    
+    showToast("✅ Download started!");
 }
 
-// Download for Mobile App (WebView/APK)
-function downloadForMobileApp(fileName, blob, bytes) {
-    // Method 1: Try Android bridge if available
-    if (window.Android && window.Android.downloadFile) {
-        try {
-            // Convert to base64 for Android bridge
-            const base64 = btoa(String.fromCharCode(...bytes));
-            window.Android.downloadFile(base64, fileName, 'application/pdf');
-            showToast("⏳ Opening in App...");
-            return;
-        } catch (e) {
-            console.warn("Android bridge failed:", e);
-        }
-    }
-    
-    // Method 2: Try iOS bridge if available
-    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.downloadHandler) {
-        try {
-            const reader = new FileReader();
-            reader.onload = function() {
-                const base64 = reader.result.split(',')[1];
-                window.webkit.messageHandlers.downloadHandler.postMessage({
-                    fileName: fileName,
-                    base64Data: base64,
-                    mimeType: 'application/pdf'
-                });
-            };
-            reader.readAsDataURL(blob);
-            showToast("⏳ Opening in App...");
-            return;
-        } catch (e) {
-            console.warn("iOS bridge failed:", e);
-        }
-    }
-    
-    // Method 3: Use blob URL with iframe (works in many WebViews)
+function downloadFromBase64() {
     try {
+        const binary = window.atob(currentFile.bytes);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        
+        const blob = new Blob([bytes], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         
-        // Try opening in new window/tab
-        const newWindow = window.open(url, '_blank');
-        if (newWindow) {
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-            showToast("✅ Opening PDF...");
-        } else {
-            // If popup blocked, use iframe
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = url;
-            document.body.appendChild(iframe);
-            setTimeout(() => {
-                document.body.removeChild(iframe);
-                URL.revokeObjectURL(url);
-            }, 1000);
-            showToast("✅ PDF Loaded");
-        }
-    } catch (error) {
-        console.error("Mobile download failed:", error);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFile.name || "certificate.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
         
-        // Method 4: Last resort - use data URL (limited size)
-        if (bytes.length < 10000000) { // 10MB limit
-            const reader = new FileReader();
-            reader.onload = function() {
-                const dataUrl = reader.result;
-                const link = document.createElement('a');
-                link.href = dataUrl;
-                link.download = fileName;
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            };
-            reader.readAsDataURL(blob);
-        } else {
-            alert("File too large for mobile download. Please use desktop browser.");
-        }
+        showToast("✅ Download Complete!");
+    } catch (error) {
+        alert("Download failed: " + error.message);
     }
 }
 
+// ==================== HELPER FUNCTIONS ====================
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.innerText = msg;
@@ -385,46 +319,26 @@ window.onclick = (e) => {
     if (!e.target.closest('.search-container')) {
         document.getElementById('searchSuggestions').style.display = 'none';
     } 
-};*/
+};
 
-function initiateDownload() {
-    if (!currentFile || !currentFile.id) {
-        return alert("Error: File ID not found.");
-    }
-
-    // 1. Generate the Direct Link
-    const directLink = `https://drive.google.com/uc?export=download&id=${currentFile.id}`;
-
-    // 2. Identify environment
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    if (isMobile) {
-        // For APK/Mobile: We use window.open to hand the link to the system browser.
-        // This solves "Can only download HTTP/HTTPS URI's: blob" error.
-        window.open(directLink, '_blank');
-        showToast("🚀 Handing over to System Downloader...");
-    } else {
-        // For Desktop: Standard download link
-        const a = document.createElement('a');
-        a.href = directLink;
-        a.download = currentFile.name || "certificate.pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
-}
-
-// Handle Enter key in login
-document.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
-        handleLogin();
-    }
-});
-
-// Initialize when page loads
+// ==================== ENTER KEY SUPPORT FOR LOGIN ====================
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus username field
-    const uidField = document.getElementById('uid');
-    if (uidField) uidField.focus();
+    const uidInput = document.getElementById('uid');
+    const passInput = document.getElementById('pass');
+    
+    if (uidInput && passInput) {
+        // Press Enter in username field goes to password
+        uidInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                passInput.focus();
+            }
+        });
+        
+        // Press Enter in password field triggers login
+        passInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });
+    }
 });
-
