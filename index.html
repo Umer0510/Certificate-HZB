@@ -22,6 +22,8 @@
             --text-muted: #94a3b8;
             --success: #10b981;
             --info: #38bdf8;
+            --warning: #f59e0b;
+            --danger: #ef4444;
             --ctrl-height: 40px;
         }
 
@@ -34,45 +36,231 @@
         }
 
         /* --- LOGIN --- */
-        #login-screen { position: fixed; inset: 0; background: radial-gradient(circle at 50% -20%, #1e2631, #0b0e14); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { background: var(--glass); backdrop-filter: blur(20px); padding: 50px 35px; border-radius: 30px; width: 90%; max-width: 420px; text-align: center; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        #login-screen { 
+            position: fixed; inset: 0; 
+            background: radial-gradient(circle at 50% -20%, #1e2631, #0b0e14); 
+            display: flex; align-items: center; justify-content: center; 
+            z-index: 9999; 
+        }
+        .login-card { 
+            background: var(--glass); backdrop-filter: blur(20px); 
+            padding: 50px 35px; border-radius: 30px; 
+            width: 90%; max-width: 420px; text-align: center; 
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
+        }
         .login-card img { height: 75px; margin-bottom: 10px; filter: drop-shadow(0 0 15px var(--primary-glow)); }
-        .login-card input { width: 100%; padding: 18px 22px; margin: 12px 0; border: 1px solid var(--glass-border); border-radius: 16px; font-size: 18px; background: rgba(0,0,0,0.4); color: white; outline: none; transition: 0.3s; }
-        .login-card input:focus { border-color: var(--primary); background: rgba(0,0,0,0.5); box-shadow: 0 0 15px var(--primary-glow); }
-        .btn-login-submit { width: 160px; padding: 12px 0; margin-top: 25px; border-radius: 50px; border: none; background: var(--primary); color: white; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; }
+        .login-card input { 
+            width: 100%; padding: 18px 22px; margin: 12px 0; 
+            border: 1px solid var(--glass-border); border-radius: 16px; 
+            font-size: 18px; background: rgba(0,0,0,0.4); color: white; 
+            outline: none; transition: 0.3s; 
+        }
+        .login-card input:focus { 
+            border-color: var(--primary); background: rgba(0,0,0,0.5); 
+            box-shadow: 0 0 15px var(--primary-glow); 
+        }
+        .btn-login-submit { 
+            width: 160px; padding: 12px 0; margin-top: 25px; 
+            border-radius: 50px; border: none; 
+            background: var(--primary); color: white; 
+            font-weight: 700; font-size: 14px; 
+            text-transform: uppercase; letter-spacing: 1px; 
+            cursor: pointer; transition: 0.3s; 
+        }
 
         /* --- NAVIGATION --- */
-        nav { background: rgba(11, 14, 20, 0.85); backdrop-filter: blur(20px); padding: 8px 20px; display: none; flex-direction: column; border-bottom: 1px solid var(--glass-border); z-index: 100; }
-        .nav-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; }
+        nav { 
+            background: rgba(11, 14, 20, 0.85); backdrop-filter: blur(20px); 
+            padding: 8px 20px; display: none; flex-direction: column; 
+            border-bottom: 1px solid var(--glass-border); z-index: 100; 
+        }
+        .nav-header { 
+            display: flex; justify-content: space-between; 
+            align-items: center; width: 100%; margin-bottom: 10px; 
+        }
         .logo-nav { height: 32px; margin-right: 20px; }
         .welcome-txt { font-size: 14px; color: var(--info); font-weight: 600; }
 
-        .nav-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .nav-controls { 
+            display: grid; grid-template-columns: 1fr 1fr; 
+            gap: 10px; width: 100%; 
+        }
         .search-container { grid-column: span 2; position: relative; display: none; }
         
         select, .search-box, .action-btn { 
-            height: var(--ctrl-height) !important; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 14px; background: #1e293b; color: #f1f5f9; outline: none; width: 100%; font-weight: 500; display: flex; align-items: center;
+            height: var(--ctrl-height) !important; border-radius: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 14px; background: #1e293b; color: #f1f5f9; 
+            outline: none; width: 100%; font-weight: 500; 
+            display: flex; align-items: center;
         }
 
-        .search-box { padding-left: 40px !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; background-size: 20px; }
+        .search-box { 
+            padding-left: 40px !important; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E"); 
+            background-repeat: no-repeat; background-position: 12px center; 
+            background-size: 20px; 
+        }
 
-        #searchSuggestions { position: absolute; top: 100%; left: 0; width: 100%; background: #1e293b; border-radius: 12px; margin-top: 5px; max-height: 280px; overflow-y: auto; z-index: 1000; display: none; list-style: none; padding: 0; border: 1px solid var(--primary); }
-        .suggestion-item { padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; transition: 0.2s; }
+        #searchSuggestions { 
+            position: absolute; top: 100%; left: 0; width: 100%; 
+            background: #1e293b; border-radius: 12px; margin-top: 5px; 
+            max-height: 280px; overflow-y: auto; z-index: 1000; 
+            display: none; list-style: none; padding: 0; 
+            border: 1px solid var(--primary); 
+        }
+        .suggestion-item { 
+            padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); 
+            cursor: pointer; font-size: 14px; transition: 0.2s; 
+        }
         .suggestion-item:hover { background: var(--primary); padding-left: 25px; }
 
-        #zip-progress { display: none; grid-column: span 2; width: 100%; background: rgba(255,255,255,0.1); border-radius: 6px; height: 6px; overflow: hidden; margin-top: -5px; }
+        #zip-progress { 
+            display: none; grid-column: span 2; width: 100%; 
+            background: rgba(255,255,255,0.1); border-radius: 6px; 
+            height: 6px; overflow: hidden; margin-top: -5px; 
+        }
         #zip-bar { width: 0%; height: 100%; background: var(--success); transition: width 0.3s; }
 
-        .action-btn { border: none; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .action-btn { 
+            border: none; justify-content: center; cursor: pointer; 
+            transition: 0.3s; 
+        }
         .btn-zip { background: var(--primary); color: white; display: none; }
         .btn-dl { background: var(--success); color: white; display: none; }
-        .btn-logout { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 6px 15px; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .btn-logout { 
+            background: rgba(239, 68, 68, 0.1); color: #ef4444; 
+            padding: 6px 15px; border: 1px solid rgba(239, 68, 68, 0.2); 
+            border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; 
+        }
 
-        #viewer-area { flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; padding: 15px; background: #080a0f; }
-        canvas { background: #fff; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); display: none; max-width: 100%; height: auto !important; }
+        #viewer-area { 
+            flex: 1; overflow: auto; display: flex; 
+            flex-direction: column; align-items: center; 
+            padding: 15px; background: #080a0f; 
+        }
+        canvas { 
+            background: #fff; border-radius: 4px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6); 
+            display: none; max-width: 100%; height: auto !important; 
+        }
 
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 25px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.3); display: none; z-index: 10000; }
+        /* --- DOWNLOAD MODAL --- */
+        #download-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+        
+        .modal-content {
+            background: var(--glass);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        
+        .modal-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+        
+        .modal-btn {
+            padding: 12px 25px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            min-width: 120px;
+        }
+        
+        .modal-btn-primary {
+            background: var(--success);
+            color: white;
+        }
+        
+        .modal-btn-secondary {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* --- TOAST --- */
+        #toast { 
+            position: fixed; bottom: 20px; left: 50%; 
+            transform: translateX(-50%); background: var(--success); 
+            color: white; padding: 12px 25px; border-radius: 50px; 
+            font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.3); 
+            display: none; z-index: 10000; 
+        }
+
+        /* --- LOADER --- */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- MOBILE SPECIFIC --- */
+        @media (max-width: 768px) {
+            .login-card {
+                padding: 40px 25px;
+                margin: 20px;
+            }
+            
+            .login-card input {
+                padding: 16px 20px;
+                font-size: 16px;
+            }
+            
+            .nav-controls {
+                gap: 8px;
+            }
+            
+            select, .search-box, .action-btn {
+                height: 38px !important;
+                font-size: 13px;
+            }
+            
+            .action-btn {
+                padding: 0 15px;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+            
+            .modal-btn {
+                width: 100%;
+            }
+        }
 
         @media (min-width: 1024px) {
             nav { flex-direction: row; height: 60px; padding: 0 40px; }
@@ -82,63 +270,31 @@
             .action-btn { width: auto; padding: 0 20px; }
             #zip-progress { position: absolute; bottom: 0; left: 0; border-radius: 0; height: 3px; }
         }
-
-        /* Add to your existing CSS */
-@media (max-width: 768px) {
-    .action-btn {
-        min-width: 120px;
-        padding: 0 15px;
-        font-size: 13px;
-    }
-    
-    #viewer-area {
-        padding: 10px;
-    }
-    
-    .login-card {
-        padding: 30px 20px;
-        margin: 20px;
-    }
-}
-
-/* Better download feedback */
-#download-indicator {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--primary);
-    color: white;
-    padding: 20px 30px;
-    border-radius: 20px;
-    z-index: 10001;
-    display: none;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
     </style>
 </head>
 <body>
 
+    <!-- Login Screen -->
     <div id="login-screen">
         <div class="login-card">
             <img src="logo1.ico" alt="Logo">
             <h2 style="margin:0; font-size: 1.8rem; letter-spacing: -1px;">Vinayaka Portal</h2>
-            <input type="text" id="uid" placeholder="Username" spellcheck="false">
-            <input type="password" id="pass" placeholder="Password">
+            <input type="text" id="uid" placeholder="Username" spellcheck="false" autocomplete="off">
+            <input type="password" id="pass" placeholder="Password" autocomplete="off">
             <button onclick="handleLogin()" class="btn-login-submit">Sign In</button>
             <p id="msg" style="color:#ef4444; font-size: 0.85rem; margin-top: 20px; min-height: 1.2em;"></p>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">© Aadil Solutions</p>
         </div>
     </div>
 
+    <!-- Navigation -->
     <nav id="navbar">
         <div class="nav-header">
             <div style="display:flex; align-items:center;">
                 <img src="logo1.ico" alt="Logo" class="logo-nav">
                 <span id="welcomeUser" class="welcome-txt"></span>
             </div>
-            <p>&nbsp;&nbsp;&nbsp;</p><button class="btn-logout" onclick="location.reload()">Logout</button>
+            <button class="btn-logout" onclick="location.reload()">Logout</button>
         </div>
         <div class="nav-controls">
             <div class="search-container" id="adminSearchWrap">
@@ -146,15 +302,19 @@
                 <ul id="searchSuggestions"></ul>
             </div>
             <select id="batchSelect" onchange="loadCandidates()"><option value="">Select Batch</option></select>
-            <button id="zipBtn" class="action-btn btn-zip" onclick="downloadBatchZip()">Download ZIP</button>
+            <button id="zipBtn" class="action-btn btn-zip" onclick="showZipDownloadModal()">Download ZIP</button>
             <div id="zip-progress"><div id="zip-bar"></div></div>
             <select id="candSelect" onchange="fetchFile(this.value)"><option value="">Candidates</option></select>
-            <button id="dlBtn" class="action-btn btn-dl" onclick="initiateDownload()">Download</button>
+            <button id="dlBtn" class="action-btn btn-dl" onclick="showDownloadModal()">Download</button>
         </div>
     </nav>
 
+    <!-- Main Viewer Area -->
     <div id="viewer-area">
-        <div id="loader" style="display:none; color:var(--primary); font-weight: bold; margin: 20px;">⏳ Processing...</div>
+        <div id="loader" style="display:none; text-align:center;">
+            <div class="spinner"></div>
+            <p style="color:var(--primary); font-weight: bold; margin: 20px;">Processing...</p>
+        </div>
         <div id="welcome-msg" style="text-align:center; padding: 60px; color: var(--text-muted);">
             <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
             <p>Select a record to begin</p>
@@ -162,10 +322,26 @@
         <canvas id="pdfCanvas"></canvas>
     </div>
 
+    <!-- Download Modal -->
+    <div id="download-modal">
+        <div class="modal-content">
+            <div class="modal-icon">📥</div>
+            <h3 id="modal-title">Download File</h3>
+            <p id="modal-message">Select download method:</p>
+            <div class="modal-buttons">
+                <button id="modal-direct-btn" class="modal-btn modal-btn-primary" onclick="proceedDirectDownload()">Direct Download</button>
+                <button id="modal-base64-btn" class="modal-btn" onclick="proceedBase64Download()" style="background: var(--primary); color: white;">Save to Device</button>
+                <button id="modal-cancel-btn" class="modal-btn modal-btn-secondary" onclick="hideDownloadModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
     <div id="toast">✅ Download Complete!</div>
 
+    <!-- Footer -->
     <footer style="padding:10px; background:var(--bg-deep); border-top:1px solid var(--glass-border); display:none; justify-content:center; align-items:center; font-size:10px; color:var(--text-muted);" id="footer">
-        <img src="logo.ico" alt="Logo" height="15px" width="15px" style="margin-right:8px;">
+        <img src="logo1.ico" alt="Logo" height="15px" width="15px" style="margin-right:8px;">
         © 2026 Aadil Solutions 
     </footer>
 
