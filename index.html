@@ -82,6 +82,40 @@
             .action-btn { width: auto; padding: 0 20px; }
             #zip-progress { position: absolute; bottom: 0; left: 0; border-radius: 0; height: 3px; }
         }
+
+        /* Add to your existing CSS */
+@media (max-width: 768px) {
+    .action-btn {
+        min-width: 120px;
+        padding: 0 15px;
+        font-size: 13px;
+    }
+    
+    #viewer-area {
+        padding: 10px;
+    }
+    
+    .login-card {
+        padding: 30px 20px;
+        margin: 20px;
+    }
+}
+
+/* Better download feedback */
+#download-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--primary);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 20px;
+    z-index: 10001;
+    display: none;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
     </style>
 </head>
 <body>
@@ -104,7 +138,7 @@
                 <img src="logo1.ico" alt="Logo" class="logo-nav">
                 <span id="welcomeUser" class="welcome-txt"></span>
             </div>
-            <button class="btn-logout" onclick="location.reload()">Logout</button>
+            <p>&nbsp;&nbsp;&nbsp;</p><button class="btn-logout" onclick="location.reload()">Logout</button>
         </div>
         <div class="nav-controls">
             <div class="search-container" id="adminSearchWrap">
@@ -115,7 +149,7 @@
             <button id="zipBtn" class="action-btn btn-zip" onclick="downloadBatchZip()">Download ZIP</button>
             <div id="zip-progress"><div id="zip-bar"></div></div>
             <select id="candSelect" onchange="fetchFile(this.value)"><option value="">Candidates</option></select>
-            <button id="dlBtn" class="action-btn btn-dl" onclick="downloadCurrentFile()">Download</button>
+            <button id="dlBtn" class="action-btn btn-dl" onclick="initiateDownload()">Download</button>
         </div>
     </nav>
 
